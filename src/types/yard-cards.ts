@@ -1,0 +1,1 @@
+export interface MYardCard {id:number,yardId:number,cardCode:string,cardName:string,maxCard:number,startNum:number,endNum:number,kodeKbm:string}

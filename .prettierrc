@@ -1,0 +1,23 @@
+{
+  "printWidth": 80,
+  "overrides": [
+    {
+      "files": ["*.js", "*.ts", "*.jsx", "*.tsx"],
+      "options": {
+        "semi": true,
+        "singleQuote": false,
+        "quoteProps": "as-needed",
+        "jsxSingleQuote": false,
+        "trailingComma": "all",
+        "bracketSpacing": true,
+        "objectWrap": "preserve",
+        "bracketSameLine": false,
+        "arrowParens": "always",
+        "proseWrap": "preserve",
+        "htmlWhitespaceSensitivity": "css",
+        "embeddedLanguageFormatting": "auto",
+        "singleAttributePerLine": true
+      }
+    }
+  ]
+}

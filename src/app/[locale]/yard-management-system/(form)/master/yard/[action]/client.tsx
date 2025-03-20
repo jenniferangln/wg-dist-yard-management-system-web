@@ -231,6 +231,7 @@ export default function Page({
                     label="Yard Code"
                     name="yardCode"
                     type="text"
+                    disabled={action === 'update'}
                     defaultValue={form.yardCode}
                     onBlur={(ev) =>
                       handleFormChange("yardCode", ev.target.value)

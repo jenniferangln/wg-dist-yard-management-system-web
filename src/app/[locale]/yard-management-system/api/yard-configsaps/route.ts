@@ -6,9 +6,8 @@ import type { Response } from "@/types/api"
 export async function POST(req: Request) {
 	const data = await req.json()
 	try {
-		const response = await http.post<Response<any, string>>("yard-activity-categories", data)
-		console.log(response);
-		return NextResponse.json({ message: response.data.message, id: response.data.data.raw[0].id })
+		const response = await http.post<Response<null, string>>("yard-configsaps", data)
+		return NextResponse.json({ message: response.data.message })
 	} catch (error) {
 		const err = error as AxiosError<Response<null | { listMessage: string[] }, string>>
 		return NextResponse.json(

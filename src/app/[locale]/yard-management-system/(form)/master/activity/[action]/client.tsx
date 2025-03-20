@@ -1,40 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { z } from "zod";
+import type { Response } from "@/types/api";
+import type { MYardActivity } from "@/types/yard-activities";
+import { useRouter } from "@bprogress/next";
+import { AddRounded, DeleteRounded } from "@mui/icons-material";
+import { Box, Stack } from "@mui/material";
 import {
-  TextField,
   Button,
-  RadioGroup,
-  RadioGroupItem,
   Dialog,
   MenuItem,
+  RadioGroup,
+  RadioGroupItem,
   Select,
   Snackbar,
-  useSnackbar,
+  TextField,
   Topbar,
-  getStrokeColor,
-  responsive,
+  Typography,
+  breakpoint,
   getGap,
   getPadding,
-  shadow,
   getRadius,
-  breakpoint,
+  getStrokeColor,
+  responsive,
+  shadow,
+  useSnackbar,
 } from "@wings-corporation/phoenix-ui";
-import { Box, Container, Grid2, Stack } from "@mui/material";
-import type { MYardActivity } from "@/types/yard-activities";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "@bprogress/next";
 import axios, { AxiosError } from "axios";
-import type { Response } from "@/types/api";
-import { usePathname } from "next/navigation";
-import React from "react";
-import AddIcon from "@mui/icons-material/Add";
-
-type YardActivityCategoryOptions = {
-  id: number;
-  yardActivityCategory: string;
-};
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 
 const formSchema = z.object({
   yardActivity: z
@@ -75,6 +69,18 @@ type FormCategoryError = {
   };
 };
 
+const formDeleteCatSchema = z.object({
+  yardActivityCategoryId: z
+    .number({ message: "Field is required" })
+    .gt(0, { message: "Activity category must be chosen" }),
+});
+
+type FormDeleteCatError = {
+  [key in keyof z.infer<typeof formDeleteCatSchema>]?: {
+    _errors: string[];
+  };
+};
+
 interface PageProps {
   action: "create" | "update";
   data: MYardActivity | null;
@@ -97,7 +103,7 @@ export default function Page({
   });
   const [formCat, setFormCat] = useState({
     yardActivityCategory: "",
-    isCreateTaskDoc: false,
+    isCreateTaskDoc: true,
   });
   const { triggerSnackbar } = useSnackbar();
   const searchParams = useSearchParams();
@@ -106,11 +112,21 @@ export default function Page({
   const redirect = pathname.split("/").slice(0, -1).join("/");
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [dialogCatOpen, setDialogCatOpen] = useState(false);
+  const [dialogDelOpen, setDialogDelOpen] = useState(false);
+  const [dialogConfirmOpen, setDialogConfirmOpen] = useState({
+    isOpen: false,
+    isDeleting: false,
+  });
   const [isCatSubmitted, setIsCatSubmitted] = useState(false);
   const [isCatLoading, setIsCatLoading] = useState(false);
   const [errorCategory, setErrorCategory] = useState<FormCategoryError | null>(
     null,
   );
+  const [formDeleteCat, setFormDeleteCat] = useState({
+    yardActivityCategoryId: -1,
+  });
+  const [errorDeleteCat, setErrorDeleteCat] =
+    useState<FormDeleteCatError | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -125,10 +141,8 @@ export default function Page({
     if (isCatSubmitted) {
       const result = formCategorySchema.safeParse(updatedForm);
       if (!result.success) {
-        console.log("error form category");
         const errors = result.error.format() as FormCategoryError;
         setErrorCategory(errors);
-        console.log(errors);
       } else {
         setErrorCategory(null);
       }
@@ -137,24 +151,19 @@ export default function Page({
   }
 
   function onCategorySubmit() {
-    console.log("oncatsubmit");
     setIsCatSubmitted(true);
     const result = formCategorySchema.safeParse(formCat);
     if (!result.success) {
-      console.log("parse failed");
       const errors = result.error.format() as FormCategoryError;
       setErrorCategory(errors);
-      console.log(formCat);
-      console.log(errors);
       return;
     }
-    console.log("parse success");
     setIsCatLoading(true);
     const data = {
       data: [formCat],
     };
     axios
-      .post<Response<null, string>>(
+      .post<Response<any, string>>(
         "/yard-management-system/api/yard-activity-categories",
         data,
       )
@@ -162,7 +171,11 @@ export default function Page({
         triggerSnackbar({ message: r.data.message, emoji: "sparkles" });
         setTimeout(() => {
           // refresh category options here
-
+          yardActivityCategoryIdOptions.push({
+            value: parseInt(r.data.id),
+            label: formCat.yardActivityCategory,
+          });
+          resetFormCategory();
           setDialogCatOpen(false);
         }, 4000);
       })
@@ -173,6 +186,57 @@ export default function Page({
         }),
       )
       .finally(() => setIsCatLoading(false));
+  }
+
+  function resetFormCategory() {
+    setIsCatSubmitted(false);
+    setErrorCategory(null);
+    setFormCat({
+      yardActivityCategory: "",
+      isCreateTaskDoc: false,
+    });
+  }
+
+  function onCategoryDeleteChange(value: number) {
+    setFormDeleteCat({ yardActivityCategoryId: value });
+    const result = formDeleteCatSchema.safeParse(formDeleteCat);
+    if (!result.success) {
+      const errors = result.error.format() as FormDeleteCatError;
+      setErrorDeleteCat(errors);
+    } else {
+      setErrorDeleteCat(null);
+    }
+  }
+
+  function onDeleteClicked() {
+    const result = formDeleteCatSchema.safeParse(formDeleteCat);
+    if (!result.success) {
+      const errors = result.error.format() as FormDeleteCatError;
+      setErrorDeleteCat(errors);
+    } else {
+      setErrorDeleteCat(null);
+      setDialogConfirmOpen((prev) => ({ ...prev, isOpen: true }));
+    }
+  }
+
+  function deleteCategory() {
+    setDialogConfirmOpen((prev) => ({ ...prev, isDeleting: true }));
+    let id = formDeleteCat.yardActivityCategoryId;
+    axios
+      .delete<Response<null, string>>(
+        `/yard-management-system/api/yard-activity-categories/${id}`,
+      )
+      .then((r) => {
+        router.refresh();
+        setDialogDelOpen(false);
+        triggerSnackbar({ message: r.data.message, emoji: "sparkles" });
+      })
+      .catch((err: AxiosError<{ message: string }>) =>
+        triggerSnackbar({ message: err.response!.data.message }),
+      )
+      .finally(() =>
+        setDialogConfirmOpen({ isOpen: false, isDeleting: false }),
+      );
   }
 
   function handleFormChange(key: keyof typeof form, value: string | number) {
@@ -374,24 +438,38 @@ export default function Page({
                       )
                     }
                   >
-                    {yardActivityCategoryIdOptions?.map((item, idx) => (
+                    {yardActivityCategoryIdOptions?.map((item) => (
                       <MenuItem
-                        key={idx}
+                        key={item.value}
                         value={item.value}
                       >
                         {item.label}
                       </MenuItem>
                     ))}
                   </Select>
-                  <Button
-                    size="md"
-                    variant="neutral"
-                    startIcon={<AddIcon />}
-                    sx={{ color: "#00a69a" }}
-                    onClick={() => setDialogCatOpen(true)}
+                  <Stack
+                    direction="row"
+                    spacing={2}
                   >
-                    Add Category
-                  </Button>
+                    <Button
+                      size="md"
+                      variant="neutral-outline"
+                      startIcon={<AddRounded />}
+                      sx={{ color: "#00a69a" }}
+                      onClick={() => setDialogCatOpen(true)}
+                    >
+                      Add Category
+                    </Button>
+                    <Button
+                      size="md"
+                      variant="neutral-outline"
+                      startIcon={<DeleteRounded />}
+                      sx={{ color: "#00a69a", ml: 1 }}
+                      onClick={() => setDialogDelOpen(true)}
+                    >
+                      Delete Category
+                    </Button>
+                  </Stack>
                 </Stack>
               </Box>
             </Stack>
@@ -401,13 +479,20 @@ export default function Page({
             fullWidth
             open={dialogCatOpen}
             title="Add New Activity Category"
+            onClose={() => {
+              setDialogCatOpen(false);
+              resetFormCategory();
+            }}
             slotProps={{
               submitButton: {
                 isLoading: isCatLoading,
                 onClick: () => onCategorySubmit(),
               },
               cancelButton: {
-                onClick: () => setDialogCatOpen(false),
+                onClick: () => {
+                  setDialogCatOpen(false);
+                  resetFormCategory();
+                },
               },
             }}
           >
@@ -431,7 +516,7 @@ export default function Page({
             <RadioGroup
               title="Create Task Document"
               datatype="boolean"
-              defaultValue={null}
+              defaultValue={formCat.isCreateTaskDoc}
               onChange={(ev) => {
                 handleFormCatChange(
                   "isCreateTaskDoc",
@@ -453,6 +538,70 @@ export default function Page({
                 value={false}
               />
             </RadioGroup>
+          </Dialog>
+          <Dialog
+            fullWidth
+            open={dialogDelOpen}
+            title="Delete Activity Category"
+            onClose={() => setDialogDelOpen(false)}
+            slotProps={{
+              submitButton: {
+                isLoading: isCatLoading,
+                onClick: () => onDeleteClicked(),
+              },
+              cancelButton: {
+                onClick: () => setDialogDelOpen(false),
+              },
+            }}
+          >
+            <Select
+              fullWidth
+              label="Activity Category"
+              error={
+                errorDeleteCat?.yardActivityCategoryId &&
+                errorDeleteCat.yardActivityCategoryId._errors?.length > 0
+              }
+              helperText={errorDeleteCat?.yardActivityCategoryId?._errors?.join(", ")}
+              name="yardActivityCategoryId"
+              value={formDeleteCat.yardActivityCategoryId}
+              onChange={(ev) => onCategoryDeleteChange(+ev.target.value)}
+            >
+              {yardActivityCategoryIdOptions?.map((item) => (
+                <MenuItem
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </Dialog>
+          <Dialog
+            slotProps={{
+              cancelButton: {
+                onClick: () =>
+                  setDialogConfirmOpen((prev) => ({ ...prev, isOpen: false })),
+                disabled: dialogConfirmOpen.isDeleting,
+              },
+              submitButton: {
+                children: dialogConfirmOpen.isDeleting
+                  ? "Deleting..."
+                  : "Delete",
+                isLoading: dialogConfirmOpen.isDeleting,
+                variant: "negative",
+                onClick: () => deleteCategory(),
+              },
+            }}
+            title="Delete Confirmation"
+            open={dialogConfirmOpen.isOpen}
+            onClose={() => {
+              setDialogConfirmOpen((prev) => ({ ...prev, isOpen: false }));
+            }}
+            fullWidth
+          >
+            <Box>
+              <Typography>Do you want to delete this item?</Typography>
+            </Box>
           </Dialog>
         </Stack>
       </Stack>

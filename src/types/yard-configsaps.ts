@@ -1,0 +1,1 @@
+export interface MYardConfigsap {id:number,yardId:number,host:string,client:string,systemNumber:string,systemId:string,username:string,password:string,lang:string}
