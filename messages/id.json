@@ -1,0 +1,6 @@
+{
+    "HomePage": {
+      "title": "Halo dunia!",
+      "about": "Ini adalah contoh sederhana tentang bagaimana menggunakan i18n dalam aplikasi React."
+    }
+}

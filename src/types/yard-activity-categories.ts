@@ -1,0 +1,1 @@
+export interface MYardActivityCategory {id:number,yardActivityCategory:string,isCreateTaskDoc:boolean}

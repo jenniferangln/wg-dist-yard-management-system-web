@@ -1,0 +1,1 @@
+export interface MYardActivity {id:number,yardActivity:string,yardActivityDesc:string,yardActivityCategoryId:number,pubToKafkaTopic:string}

@@ -1,6 +1,6 @@
 {
-  "name": "smu-distribution-yard-management-system-web",
-  "version": "0.1.0",
+  "name": "wg-distribution-yard-management-system-web",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -9,17 +9,25 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@bprogress/next": "^3.2.4",
+    "@tanstack/react-query": "^5.67.1",
+    "@wings-corporation/phoenix-ui": "^0.1.25",
+    "axios": "^1.7.9",
+    "moment": "^2.30.1",
+    "next": "15.2.1",
+    "next-intl": "^3.26.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.2.1"
+    "zod": "^3.24.2",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.2.1",
-    "@eslint/eslintrc": "^3"
+    "typescript": "^5"
   }
 }

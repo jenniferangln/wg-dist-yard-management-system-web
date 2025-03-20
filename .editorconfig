@@ -1,0 +1,22 @@
+# Frontend .editorconfig file for consistent code style
+# https://editorconfig.org
+root = true
+
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = false
+trim_trailing_whitespace = true
+indent_style = space
+charset = utf-8
+
+
+# Matches multiple files with brace expansion notation
+[*.{ts,tsx,js,jsx,json}]
+indent_size = 2
+
+
+# Matches the exact files either package.json or .travis.yml
+[*.{md,yaml,html,css,scss,md,xml}]
+indent_size = 4

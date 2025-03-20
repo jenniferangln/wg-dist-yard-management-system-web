@@ -1,0 +1,10 @@
+{
+    "HomePage": {
+      "title": "Hello world!",
+      "about": "This is a simple example of how to use i18n in a React application."
+    },
+    "CheckPage": {
+      "title": "Hello world Check Page!",
+      "about": "This is a simple example of how to use i18n in a React application."
+    }
+}
